@@ -2077,6 +2077,16 @@ entries:
   web-app:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2026-10-11T09:25:54.17039358Z"
+    description: A Helm chart for deploying web applications
+    digest: 53a3176dd34679c449b6e90ab35363b862f1f3248f21d12247d0b9824515cb4e
+    name: web-app
+    type: application
+    urls:
+    - https://github.com/boatload-llc/helm-charts/releases/download/web-app-0.4.68/web-app-0.4.68.tgz
+    version: 0.4.68
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2026-10-08T01:09:22.903484934Z"
     description: A Helm chart for deploying web applications
     digest: f2fd3fa4a2384735839e8a2ee488a26f32317f90945f13c85dc1bc2130a7848f
