@@ -4,7 +4,7 @@ local: false
 image_pull_secrets: []              # Secret names for private registries; unneeded on GKE
 non_preemptible: false
 
-github_org: theboarderline
+github_org: boatload-llc
 
 primary_cluster_name: central-cluster
 primary_cluster: central-cluster-membership

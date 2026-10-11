@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Helm chart for deploying theboarderline platform web apps (React frontend + Go API) on GKE. Published to `https://theboarderline.github.io/helm-charts` via chart-releaser on merge to `main`.
+Helm chart for deploying boatload-llc platform web apps (React frontend + Go API) on GKE. Published to `https://boatload-llc.github.io/helm-charts` via chart-releaser on merge to `main`.
 
 ## Dev Workflow
 
