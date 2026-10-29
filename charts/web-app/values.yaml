@@ -1,6 +1,8 @@
 enabled: true
 local: false
 
+commonLabels: {}                    # added to the labels of every object a non-GKE install renders
+
 image_pull_secrets: []              # Secret names for private registries; unneeded on GKE
 non_preemptible: false
 

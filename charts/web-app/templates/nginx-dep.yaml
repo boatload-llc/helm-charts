@@ -9,6 +9,7 @@ metadata:
     namespace: {{ .Release.Namespace }}
     tier: frontend
     backstage.io/kubernetes-id: {{ .Values.app_code }}
+    {{- with .Values.commonLabels }}{{ toYaml . | nindent 4 }}{{ end }}
 spec:
   replicas: {{ required "REQUIRED: nginx.replicas" .Values.nginx.replicas }}
   strategy:

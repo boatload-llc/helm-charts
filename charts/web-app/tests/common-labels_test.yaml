@@ -1,0 +1,33 @@
+suite: common labels
+templates:
+  - api-dep.yaml
+  - api-svc.yaml
+  - backend-config.yaml
+  - configs.yaml
+  - cronjob.yaml
+  - external-secrets.yaml
+  - frontend-config.yaml
+  - google-credentials.yaml
+  - hpa.yaml
+  - ingress.yaml
+  - managed-cert.yaml
+  - nginx-dep.yaml
+  - nginx-svc.yaml
+  - postgres.yaml
+  - service-account.yaml
+values:
+  - ../test-values.yaml
+set:
+  autoscaler:
+    enabled: true
+  google:
+    federation:
+      audience: //iam.googleapis.com/projects/1/locations/global/workloadIdentityPools/p/providers/r
+  commonLabels:
+    example.net/app: widget
+tests:
+  - it: adds the common labels to every object
+    asserts:
+      - equal:
+          path: metadata.labels["example.net/app"]
+          value: widget

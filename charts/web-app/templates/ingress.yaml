@@ -10,6 +10,7 @@ metadata:
   labels:
     namespace: {{ .Release.Namespace }}
     backstage.io/kubernetes-id: {{ .Values.app_code }}
+    {{- with .Values.commonLabels }}{{ toYaml . | nindent 4 }}{{ end }}
   annotations:
     {{- if .Values.acm.enabled }}
     configsync.gke.io/cluster-name-selector: {{ include "primary_cluster" $ }}

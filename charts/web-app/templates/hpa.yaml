@@ -8,6 +8,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     backstage.io/kubernetes-id: {{ .Values.app_code }}
+    {{- with .Values.commonLabels }}{{ toYaml . | nindent 4 }}{{ end }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -38,6 +39,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     backstage.io/kubernetes-id: {{ .Values.app_code }}
+    {{- with .Values.commonLabels }}{{ toYaml . | nindent 4 }}{{ end }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
