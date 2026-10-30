@@ -33,7 +33,7 @@
 
 
 {{- define "registry_name" -}}
-  {{- include "app_label" $ -}}-v3-images
+  {{- include "app_label" $ -}}-images
 {{- end -}}
 
 

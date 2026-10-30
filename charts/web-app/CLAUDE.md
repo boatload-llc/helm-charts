@@ -44,7 +44,7 @@ The chart deploys two workloads into a namespace named `{lifecycle}-{app_code}` 
 | `app_label` | `{lifecycle}-{app_code}` — used as namespace, release name, resource prefix |
 | `app_project` | `{app_code}-app-project` — GCP project for Secret Manager, Artifact Registry, Cloud Build |
 | `subdomain` | prod → `domain`; non-prod → `{lifecycle}.{domain}` |
-| `registry_name` | `{lifecycle}-{app_code}-v3-images` — Artifact Registry repo |
+| `registry_name` | `{lifecycle}-{app_code}-images` — Artifact Registry repo |
 | `api_image` | `{region}-docker.pkg.dev/{app_project}/{registry_name}/api:{api.tag}` |
 | `nginx_image` | `{region}-docker.pkg.dev/{app_project}/{registry_name}/react:{nginx.tag}` |
 | `branch` | prod → `main`; non-prod → `{lifecycle}` |

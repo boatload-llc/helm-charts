@@ -10,6 +10,7 @@ metadata:
     backstage.io/kubernetes-id: test
   annotations:
     iam.gke.io/gcp-service-account: test-workload@test-app-project.iam.gserviceaccount.com
+
 ---
 # Source: web-app/templates/configs.yaml
 apiVersion: v1
@@ -33,6 +34,11 @@ metadata:
   namespace: test-ns
 data:
   api.conf: |
+    location ~ \.html$ {
+        root /var/www/html;
+        add_header Cache-Control "no-cache";
+    }
+
     location /api/ {
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -63,6 +69,7 @@ data:
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_pass http://api-svc.test-ns.svc;
     }
+
 ---
 # Source: web-app/templates/api-svc.yaml
 apiVersion: v1
@@ -86,6 +93,7 @@ spec:
     port: 80
     protocol: TCP
     targetPort: 8000
+
 ---
 # Source: web-app/templates/nginx-svc.yaml
 apiVersion: v1
@@ -110,6 +118,7 @@ spec:
     port: 443
     protocol: TCP
     targetPort: 3000
+
 ---
 # Source: web-app/templates/api-dep.yaml
 apiVersion: apps/v1
@@ -169,7 +178,7 @@ spec:
       restartPolicy: Always
       containers:
       - name: api
-        image: us-central1-docker.pkg.dev/test-app-project/dev-test-v3-images/api:latest
+        image: us-central1-docker.pkg.dev/test-app-project/dev-test-images/api:latest
         imagePullPolicy: Always
 
         securityContext:
@@ -368,6 +377,9 @@ spec:
           runAsNonRoot: true
           seccompProfile:
             type: RuntimeDefault
+
+
+
 ---
 # Source: web-app/templates/nginx-dep.yaml
 apiVersion: apps/v1
@@ -420,7 +432,7 @@ spec:
       serviceAccountName: default
       containers:
       - name: nginx
-        image: us-central1-docker.pkg.dev/test-app-project/dev-test-v3-images/react:latest
+        image: us-central1-docker.pkg.dev/test-app-project/dev-test-images/react:latest
         imagePullPolicy: Always
 
         securityContext:
@@ -527,6 +539,7 @@ spec:
           emptyDir: {}
         - name: pid-dir
           emptyDir: {}
+
 ---
 # Source: web-app/templates/cronjob.yaml
 apiVersion: batch/v1
@@ -553,7 +566,7 @@ spec:
           restartPolicy: Never
           containers:
           - name: http
-            image: gcr.io/walker-cpl/httpie:0.0.3
+            image: curlimages/curl:8.11.1
             imagePullPolicy: IfNotPresent
 
             securityContext:
@@ -566,11 +579,14 @@ spec:
                 type: RuntimeDefault
 
             args:
+            - --silent
+            - --show-error
+            - --fail-with-body
+            - --request
             - POST
-            - api-svc.test-ns.svc/api/endpoint
-            - key=$(API_KEY)
-            - --ignore-stdin
-            - --check-status
+            - --json
+            - "{\"key\": \"$(API_KEY)\"}"
+            - http://api-svc.test-ns.svc/api/endpoint
 
             env:
             - name: API_KEY
@@ -600,6 +616,8 @@ spec:
       name: nginx-svc
       port:
         number: 443
+
+
 ---
 # Source: web-app/templates/backend-config.yaml
 apiVersion: cloud.google.com/v1
@@ -646,7 +664,7 @@ spec:
     name: us-only
 ---
 # Source: web-app/templates/external-secrets.yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: app-secrets
@@ -687,6 +705,9 @@ spec:
     - secretKey: twilio-account-sid
       remoteRef:
         key: twilio-account-sid
+
+
+
 ---
 # Source: web-app/templates/frontend-config.yaml
 apiVersion: networking.gke.io/v1beta1
@@ -701,6 +722,7 @@ spec:
   redirectToHttps:
     enabled: true
     responseCodeName: MOVED_PERMANENTLY_DEFAULT
+
 ---
 # Source: web-app/templates/managed-cert.yaml
 apiVersion: networking.gke.io/v1 
@@ -716,6 +738,7 @@ metadata:
 spec:
   domains:
     - dev.example.com
+
 ---
 # Source: web-app/templates/postgres.yaml
 apiVersion: postgres-operator.crunchydata.com/v1beta1
@@ -756,9 +779,10 @@ spec:
             resources:
               requests:
                 storage: 10Gi
+
 ---
 # Source: web-app/templates/external-secrets.yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: SecretStore
 metadata:
   name: secret-store

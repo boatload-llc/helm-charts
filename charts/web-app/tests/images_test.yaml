@@ -19,7 +19,7 @@ tests:
     asserts:
       - matchRegex:
           path: spec.template.spec.containers[0].image
-          pattern: "^us-central1-docker\\.pkg\\.dev/testapp-app-project/dev-testapp-v3-images/api:"
+          pattern: "^us-central1-docker\\.pkg\\.dev/testapp-app-project/dev-testapp-images/api:"
 
   - it: uses api.image verbatim when set
     templates:

@@ -43,7 +43,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: us-central1-docker.pkg.dev/test-app-project/dev-test-v3-images/react:v1.0.0
+          value: us-central1-docker.pkg.dev/test-app-project/dev-test-images/react:v1.0.0
 
   - it: LIFECYCLE env var reflects lifecycle value
     set:
