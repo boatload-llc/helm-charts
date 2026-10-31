@@ -1,5 +1,6 @@
 enabled: true
 local: false
+host: ""                            # where it is served; <lifecycle>.<domain> when empty, the domain itself for prod
 
 commonLabels: {}                    # added to the labels of every object a non-GKE install renders
 

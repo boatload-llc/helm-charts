@@ -64,6 +64,24 @@ tests:
           path: metadata.annotations["external-dns.alpha.kubernetes.io/hostname"]
           value: dev.example.com.
 
+  - it: serves the host it is given in place of its lifecycle under the domain
+    set:
+      enabled: true
+      local: false
+      lifecycle: stage
+      app_code: test
+      domain: example.com
+      host: app.example.com
+      ingress:
+        enabled: true
+        mci: false
+        https: false
+        nginx: true
+    asserts:
+      - equal:
+          path: spec.rules[0].host
+          value: app.example.com
+
   - it: default backend is nginx-svc when nginx enabled
     set:
       enabled: true

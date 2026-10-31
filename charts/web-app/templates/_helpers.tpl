@@ -10,7 +10,9 @@
 
 
 {{- define "subdomain" -}}
-  {{- if eq .Values.lifecycle "prod" }}
+  {{- if .Values.host }}
+    {{- .Values.host }}
+  {{- else if eq .Values.lifecycle "prod" }}
     {{- include "domain" . }}
   {{- else }}
     {{- include "lifecycle" $ -}}.{{- include "domain" . }}
