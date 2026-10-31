@@ -82,6 +82,24 @@ tests:
           path: spec.rules[0].host
           value: app.example.com
 
+  - it: names its API's health path, so an uptime probe checks what the load balancer does
+    set:
+      enabled: true
+      local: false
+      lifecycle: dev
+      app_code: test
+      domain: example.com
+      api:
+        healthCheckPath: /api/v1/health/
+      ingress:
+        enabled: true
+        mci: false
+        https: false
+    asserts:
+      - equal:
+          path: metadata.annotations["web-app/api-health-path"]
+          value: /api/v1/health/
+
   - it: default backend is nginx-svc when nginx enabled
     set:
       enabled: true
