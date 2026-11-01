@@ -19,6 +19,7 @@ api:
   enabled: true
   image: ""                           # full repository path; derived from google.app_project when empty
   tag: latest
+  extra_env: []                       # added after env, so a lifecycle's values file sets only what it adds
   containerPort: 8000
   healthCheckPath: /api/
   timeoutSec: 86400
