@@ -51,6 +51,35 @@ tests:
             name: LIFECYCLE
             value: lswingz-42
 
+  - it: adds a lifecycle's extra env to the shared env, so a values file never repeats the list
+    set:
+      enabled: true
+      lifecycle: dev
+      app_code: test
+      domain: example.com
+      google:
+        region: us-central1
+      api:
+        enabled: true
+        tag: latest
+        env:
+          - name: SHARED
+            value: everywhere
+        extra_env:
+          - name: TEST_SWITCH
+            value: "true"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SHARED
+            value: everywhere
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEST_SWITCH
+            value: "true"
+
   - it: DOMAIN is subdomain for non-prod lifecycle
     set:
       enabled: true

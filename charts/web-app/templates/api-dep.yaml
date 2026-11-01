@@ -170,6 +170,9 @@ spec:
         {{- if .Values.api.env }}
 {{- toYaml .Values.api.env | nindent 8 }}
         {{- end }}
+        {{- with .Values.api.extra_env }}
+{{- toYaml . | nindent 8 }}
+        {{- end }}
 
         {{- if .Values.google.maps.enabled }}
         - name: USE_GOOGLE_MAPS
