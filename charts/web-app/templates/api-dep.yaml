@@ -125,6 +125,13 @@ spec:
           - mountPath: /var/tmp
             name: var-tmp-dir
 
+        startupProbe:
+          httpGet:
+            path: {{ .Values.api.healthCheckPath }}
+            port: {{ .Values.api.containerPort }}
+          failureThreshold: 40
+          periodSeconds: 15
+
         livenessProbe:
           httpGet:
             path: {{ .Values.api.healthCheckPath }}
