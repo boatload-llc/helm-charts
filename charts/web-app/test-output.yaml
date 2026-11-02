@@ -39,7 +39,7 @@ data:
         add_header Cache-Control "no-cache";
     }
 
-    location /api/ {
+    location ^~ /api/ {
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "Upgrade";
@@ -205,6 +205,13 @@ spec:
             name: usr-tmp-dir
           - mountPath: /var/tmp
             name: var-tmp-dir
+
+        startupProbe:
+          httpGet:
+            path: /api/
+            port: 8000
+          failureThreshold: 40
+          periodSeconds: 15
 
         livenessProbe:
           httpGet:
@@ -605,6 +612,7 @@ metadata:
     namespace: test-ns
     backstage.io/kubernetes-id: test
   annotations:
+    web-app/api-health-path: /api/
     networking.gke.io/v1beta1.FrontendConfig: gke-frontendconfig
     networking.gke.io/managed-certificates: google-cert
     external-dns.alpha.kubernetes.io/hostname: dev.example.com.

@@ -6,6 +6,7 @@ commonLabels: {}                    # added to the labels of every object a non-
 
 image_pull_secrets: []              # Secret names for private registries; unneeded on GKE
 non_preemptible: false
+affinity: {}                        # where the API and frontend may run, e.g. the architectures their images were built for
 
 github_org: boatload-llc
 

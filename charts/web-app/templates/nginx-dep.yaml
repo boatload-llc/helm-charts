@@ -33,6 +33,10 @@ spec:
         backstage.io/kubernetes-id: {{ .Values.app_code }}
     spec:
       terminationGracePeriodSeconds: {{ .Values.nginx.terminationGracePeriodSeconds }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 
       tolerations:
       {{- if .Values.non_preemptible }}
