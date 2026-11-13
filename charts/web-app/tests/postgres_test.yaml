@@ -17,6 +17,26 @@ tests:
       - hasDocuments:
           count: 0
 
+  - it: requests CPU and memory for the database, its repo host and its backups, so a busy node cannot starve them
+    set:
+      enabled: true
+      lifecycle: dev
+      app_code: test
+      google:
+        region: us-central1
+      postgres:
+        enabled: true
+    asserts:
+      - equal:
+          path: spec.instances[0].resources.requests
+          value: {cpu: 100m, memory: 256Mi}
+      - equal:
+          path: spec.backups.pgbackrest.repoHost.resources.requests
+          value: {cpu: 25m, memory: 64Mi}
+      - equal:
+          path: spec.backups.pgbackrest.jobs.resources.requests
+          value: {cpu: 25m, memory: 64Mi}
+
   - it: gcs disabled renders only repo1 volume, no gcs metadata or global
     set:
       enabled: true

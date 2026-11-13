@@ -34,6 +34,8 @@ spec:
         annotations:
           linkerd.io/inject: enabled
       {{- end }}
+      resources:
+        {{- toYaml .Values.postgres.resources | nindent 8 }}
       dataVolumeClaimSpec:
         {{- with .Values.postgres.storageClassName }}
         storageClassName: {{ . }}
@@ -53,6 +55,12 @@ spec:
   backups:
     pgbackrest:
       image: {{ .Values.postgres.backup.image }}
+      repoHost:
+        resources:
+          {{- toYaml .Values.postgres.backup.resources | nindent 10 }}
+      jobs:
+        resources:
+          {{- toYaml .Values.postgres.backup.resources | nindent 10 }}
       {{- if .Values.postgres.backup.gcs.enabled }}
       metadata:
         annotations:

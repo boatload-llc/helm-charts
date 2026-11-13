@@ -253,9 +253,13 @@ postgres:
   image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres:ubi8-14.6-2
   version: 14
   init_sql: ""                        # SQL run once as superuser at cluster init
+  resources:
+    requests: {cpu: 100m, memory: 256Mi}
   backup:
     type: "volume"
     image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:ubi8-2.41-2
+    resources:
+      requests: {cpu: 25m, memory: 64Mi}
     gcs:
       enabled: false
       bucket: ""
