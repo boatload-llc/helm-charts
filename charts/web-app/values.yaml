@@ -260,6 +260,15 @@ postgres:
     image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:ubi8-2.41-2
     resources:
       requests: {cpu: 25m, memory: 64Mi}
+    gcs:
+      enabled: false
+      bucket: ""
+      gcp_service_account: ""
+      schedules:
+        full: "0 2 * * *"
+        differential: "0 */6 * * *"
+      retention:
+        full: 14
     s3:
       enabled: false
       bucket: ""
