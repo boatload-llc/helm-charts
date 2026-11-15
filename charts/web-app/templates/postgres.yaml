@@ -21,6 +21,11 @@ spec:
     name: crunchydb-init-sql
     key: init.sql
   {{- end }}
+  {{- if .Values.postgres.backup.gcs.enabled }}
+  metadata:
+    annotations:
+      iam.gke.io/gcp-service-account: {{ .Values.postgres.backup.gcs.gcp_service_account | quote }}
+  {{- end }}
   instances:
     - name: instance1
       replicas: {{ .Values.postgres.replicas }}
@@ -56,17 +61,35 @@ spec:
       jobs:
         resources:
           {{- toYaml .Values.postgres.backup.resources | nindent 10 }}
-      {{- with .Values.postgres.backup.s3 }}
-      {{- if .enabled }}
+      {{- if .Values.postgres.backup.gcs.enabled }}
+      metadata:
+        annotations:
+          iam.gke.io/gcp-service-account: {{ .Values.postgres.backup.gcs.gcp_service_account | quote }}
+      global:
+        repo2-gcs-key-type: auto
+        repo2-path: /pgbackrest/{{ .Release.Namespace }}/crunchydb/repo2
+        repo2-retention-full: {{ .Values.postgres.backup.gcs.retention.full | quote }}
+        repo2-retention-full-type: count
+      {{- else if .Values.postgres.backup.s3.enabled }}
       configuration:
         - secret:
-            name: {{ required "REQUIRED: postgres.backup.s3.secret when postgres.backup.s3.enabled" .secret | quote }}
+            name: {{ required "REQUIRED: postgres.backup.s3.secret when postgres.backup.s3.enabled" .Values.postgres.backup.s3.secret | quote }}
       global:
-        repo2-path: /pgbackrest/{{ $.Release.Namespace }}/crunchydb/repo2
+        repo2-path: /pgbackrest/{{ .Release.Namespace }}/crunchydb/repo2
         repo2-s3-uri-style: path
-        repo2-retention-full: {{ .retention.full | quote }}
+        repo2-retention-full: {{ .Values.postgres.backup.s3.retention.full | quote }}
         repo2-retention-full-type: count
+      {{- end }}
       repos:
+      {{- if .Values.postgres.backup.gcs.enabled }}
+      - name: repo2
+        gcs:
+          bucket: {{ required "REQUIRED: postgres.backup.gcs.bucket when postgres.backup.gcs.enabled" .Values.postgres.backup.gcs.bucket | quote }}
+        schedules:
+          full: {{ .Values.postgres.backup.gcs.schedules.full | quote }}
+          differential: {{ .Values.postgres.backup.gcs.schedules.differential | quote }}
+      {{- else if .Values.postgres.backup.s3.enabled }}
+      {{- with .Values.postgres.backup.s3 }}
       - name: repo2
         s3:
           bucket: {{ required "REQUIRED: postgres.backup.s3.bucket when postgres.backup.s3.enabled" .bucket | quote }}
@@ -75,20 +98,19 @@ spec:
         schedules:
           full: {{ .schedules.full | quote }}
           differential: {{ .schedules.differential | quote }}
+      {{- end }}
       {{- else }}
-      repos:
       - name: repo1
         volume:
           volumeClaimSpec:
-            {{- with $.Values.postgres.storageClassName }}
+            {{- with .Values.postgres.storageClassName }}
             storageClassName: {{ . }}
             {{- end }}
             accessModes:
             - "ReadWriteOnce"
             resources:
               requests:
-                storage: {{ $.Values.postgres.disk_size }}
-      {{- end }}
+                storage: {{ .Values.postgres.disk_size }}
       {{- end }}
 
 {{- if .Values.postgres.init_sql }}

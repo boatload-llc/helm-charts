@@ -53,7 +53,7 @@ tests:
       - notExists:
           path: spec.patroni.dynamicConfiguration.postgresql.postgresql
 
-  - it: without s3, backs up only to a repo1 volume
+  - it: without gcs or s3, backs up only to a repo1 volume
     set:
       enabled: true
       lifecycle: dev
@@ -73,6 +73,8 @@ tests:
           count: 1
       - notExists:
           path: spec.backups.pgbackrest.global
+      - notExists:
+          path: spec.backups.pgbackrest.metadata
 
   - it: s3 enabled backs up only to the repo2 s3 bucket, so backups leave the database's own disk
     set:
@@ -175,6 +177,108 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: "REQUIRED: postgres.backup.s3.secret when postgres.backup.s3.enabled"
+
+  - it: gcs enabled renders only the repo2 gcs repo, no repo1 volume so no repo host
+    set:
+      enabled: true
+      lifecycle: dev
+      app_code: test
+      google:
+        region: us-central1
+      postgres:
+        enabled: true
+        backup:
+          gcs:
+            enabled: true
+            bucket: boatload-pgbackrest-dev
+            gcp_service_account: boatload-pgbackrest-dev@boatload-app-project.iam.gserviceaccount.com
+    asserts:
+      - lengthEqual:
+          path: spec.backups.pgbackrest.repos
+          count: 1
+      - equal:
+          path: spec.backups.pgbackrest.repos[0].name
+          value: repo2
+      - equal:
+          path: spec.backups.pgbackrest.repos[0].gcs.bucket
+          value: boatload-pgbackrest-dev
+      - notExists:
+          path: spec.backups.pgbackrest.repos[0].volume
+
+  - it: gcs enabled annotates the instance service account for workload identity via top-level metadata
+    set:
+      enabled: true
+      lifecycle: dev
+      app_code: test
+      google:
+        region: us-central1
+      postgres:
+        enabled: true
+        backup:
+          gcs:
+            enabled: true
+            bucket: boatload-pgbackrest-dev
+            gcp_service_account: boatload-pgbackrest-dev@boatload-app-project.iam.gserviceaccount.com
+    asserts:
+      - equal:
+          path: spec.metadata.annotations["iam.gke.io/gcp-service-account"]
+          value: boatload-pgbackrest-dev@boatload-app-project.iam.gserviceaccount.com
+
+  - it: gcs enabled wires service-account annotation, global config, schedules and retention
+    release:
+      namespace: dev-boatload
+    set:
+      enabled: true
+      lifecycle: dev
+      app_code: test
+      google:
+        region: us-central1
+      postgres:
+        enabled: true
+        backup:
+          gcs:
+            enabled: true
+            bucket: boatload-pgbackrest-dev
+            gcp_service_account: boatload-pgbackrest-dev@boatload-app-project.iam.gserviceaccount.com
+    asserts:
+      - equal:
+          path: spec.backups.pgbackrest.metadata.annotations["iam.gke.io/gcp-service-account"]
+          value: boatload-pgbackrest-dev@boatload-app-project.iam.gserviceaccount.com
+      - equal:
+          path: spec.backups.pgbackrest.global["repo2-gcs-key-type"]
+          value: auto
+      - equal:
+          path: spec.backups.pgbackrest.global["repo2-path"]
+          value: /pgbackrest/dev-boatload/crunchydb/repo2
+      - equal:
+          path: spec.backups.pgbackrest.global["repo2-retention-full"]
+          value: "14"
+      - equal:
+          path: spec.backups.pgbackrest.global["repo2-retention-full-type"]
+          value: count
+      - equal:
+          path: spec.backups.pgbackrest.repos[0].schedules.full
+          value: "0 2 * * *"
+      - equal:
+          path: spec.backups.pgbackrest.repos[0].schedules.differential
+          value: "0 */6 * * *"
+
+  - it: gcs enabled without bucket fails rendering
+    set:
+      enabled: true
+      lifecycle: dev
+      app_code: test
+      google:
+        region: us-central1
+      postgres:
+        enabled: true
+        backup:
+          gcs:
+            enabled: true
+            bucket: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: "REQUIRED: postgres.backup.gcs.bucket when postgres.backup.gcs.enabled"
 
   - it: leaves the data and backup volumes on the cluster's default storage class
     set:
