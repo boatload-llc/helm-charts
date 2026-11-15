@@ -260,10 +260,12 @@ postgres:
     image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:ubi8-2.41-2
     resources:
       requests: {cpu: 25m, memory: 64Mi}
-    gcs:
+    s3:
       enabled: false
       bucket: ""
-      gcp_service_account: ""
+      endpoint: ""                    # host[:port], no scheme
+      region: ""
+      secret: ""                      # Secret whose s3.conf holds repo2-s3-key and repo2-s3-key-secret
       schedules:
         full: "0 2 * * *"
         differential: "0 */6 * * *"

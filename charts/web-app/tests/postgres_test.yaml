@@ -37,7 +37,23 @@ tests:
           path: spec.backups.pgbackrest.jobs.resources.requests
           value: {cpu: 25m, memory: 64Mi}
 
-  - it: gcs disabled renders only repo1 volume, no gcs metadata or global
+  - it: allows as many connections as the API's replicas can open, through a key Patroni reads
+    set:
+      enabled: true
+      lifecycle: dev
+      app_code: test
+      google:
+        region: us-central1
+      postgres:
+        enabled: true
+    asserts:
+      - equal:
+          path: spec.patroni.dynamicConfiguration.postgresql.parameters.max_connections
+          value: 500
+      - notExists:
+          path: spec.patroni.dynamicConfiguration.postgresql.postgresql
+
+  - it: without s3, backs up only to a repo1 volume
     set:
       enabled: true
       lifecycle: dev
@@ -57,93 +73,108 @@ tests:
           count: 1
       - notExists:
           path: spec.backups.pgbackrest.global
-      - notExists:
-          path: spec.backups.pgbackrest.metadata
 
-  - it: gcs enabled renders only the repo2 gcs repo, no repo1 volume so no repo host
+  - it: s3 enabled backs up only to the repo2 s3 bucket, so backups leave the database's own disk
     set:
       enabled: true
-      lifecycle: dev
+      lifecycle: prod
       app_code: test
       google:
         region: us-central1
       postgres:
         enabled: true
         backup:
-          gcs:
+          s3:
             enabled: true
-            bucket: boatload-pgbackrest-dev
-            gcp_service_account: boatload-pgbackrest-dev@boatload-app-project.iam.gserviceaccount.com
+            bucket: postgres-test
+            endpoint: s3.us-central1.example.net
+            region: garage
+            secret: pgbackrest-s3
     asserts:
       - lengthEqual:
           path: spec.backups.pgbackrest.repos
           count: 1
       - equal:
-          path: spec.backups.pgbackrest.repos[0].name
-          value: repo2
-      - equal:
-          path: spec.backups.pgbackrest.repos[0].gcs.bucket
-          value: boatload-pgbackrest-dev
-      - notExists:
-          path: spec.backups.pgbackrest.repos[0].volume
+          path: spec.backups.pgbackrest.repos[0]
+          value:
+            name: repo2
+            s3:
+              bucket: postgres-test
+              endpoint: s3.us-central1.example.net
+              region: garage
+            schedules:
+              full: "0 2 * * *"
+              differential: "0 */6 * * *"
 
-  - it: gcs enabled annotates the instance service account for workload identity via top-level metadata
-    set:
-      enabled: true
-      lifecycle: dev
-      app_code: test
-      google:
-        region: us-central1
-      postgres:
-        enabled: true
-        backup:
-          gcs:
-            enabled: true
-            bucket: boatload-pgbackrest-dev
-            gcp_service_account: boatload-pgbackrest-dev@boatload-app-project.iam.gserviceaccount.com
-    asserts:
-      - equal:
-          path: spec.metadata.annotations["iam.gke.io/gcp-service-account"]
-          value: boatload-pgbackrest-dev@boatload-app-project.iam.gserviceaccount.com
-
-  - it: gcs enabled wires service-account annotation, global config, schedules and retention
+  - it: s3 enabled signs in with the keys in its secret, addresses the bucket by path and keeps 14 fulls
     release:
-      namespace: dev-boatload
+      namespace: prod-test
     set:
       enabled: true
-      lifecycle: dev
+      lifecycle: prod
       app_code: test
       google:
         region: us-central1
       postgres:
         enabled: true
         backup:
-          gcs:
+          s3:
             enabled: true
-            bucket: boatload-pgbackrest-dev
-            gcp_service_account: boatload-pgbackrest-dev@boatload-app-project.iam.gserviceaccount.com
+            bucket: postgres-test
+            endpoint: s3.us-central1.example.net
+            region: garage
+            secret: pgbackrest-s3
     asserts:
       - equal:
-          path: spec.backups.pgbackrest.metadata.annotations["iam.gke.io/gcp-service-account"]
-          value: boatload-pgbackrest-dev@boatload-app-project.iam.gserviceaccount.com
+          path: spec.backups.pgbackrest.configuration
+          value:
+            - secret:
+                name: pgbackrest-s3
       - equal:
-          path: spec.backups.pgbackrest.global["repo2-gcs-key-type"]
-          value: auto
-      - equal:
-          path: spec.backups.pgbackrest.global["repo2-path"]
-          value: /pgbackrest/dev-boatload/crunchydb/repo2
-      - equal:
-          path: spec.backups.pgbackrest.global["repo2-retention-full"]
-          value: "14"
-      - equal:
-          path: spec.backups.pgbackrest.global["repo2-retention-full-type"]
-          value: count
-      - equal:
-          path: spec.backups.pgbackrest.repos[0].schedules.full
-          value: "0 2 * * *"
-      - equal:
-          path: spec.backups.pgbackrest.repos[0].schedules.differential
-          value: "0 */6 * * *"
+          path: spec.backups.pgbackrest.global
+          value:
+            repo2-path: /pgbackrest/prod-test/crunchydb/repo2
+            repo2-s3-uri-style: path
+            repo2-retention-full: "14"
+            repo2-retention-full-type: count
+
+  - it: s3 enabled without a bucket fails rendering
+    set:
+      enabled: true
+      lifecycle: prod
+      app_code: test
+      google:
+        region: us-central1
+      postgres:
+        enabled: true
+        backup:
+          s3:
+            enabled: true
+            endpoint: s3.us-central1.example.net
+            region: garage
+            secret: pgbackrest-s3
+    asserts:
+      - failedTemplate:
+          errorMessage: "REQUIRED: postgres.backup.s3.bucket when postgres.backup.s3.enabled"
+
+  - it: s3 enabled without the secret holding its keys fails rendering
+    set:
+      enabled: true
+      lifecycle: prod
+      app_code: test
+      google:
+        region: us-central1
+      postgres:
+        enabled: true
+        backup:
+          s3:
+            enabled: true
+            bucket: postgres-test
+            endpoint: s3.us-central1.example.net
+            region: garage
+    asserts:
+      - failedTemplate:
+          errorMessage: "REQUIRED: postgres.backup.s3.secret when postgres.backup.s3.enabled"
 
   - it: leaves the data and backup volumes on the cluster's default storage class
     set:
@@ -192,20 +223,3 @@ tests:
       - equal:
           path: spec.monitoring.pgmonitor.exporter
           value: {}
-
-  - it: gcs enabled without bucket fails rendering
-    set:
-      enabled: true
-      lifecycle: dev
-      app_code: test
-      google:
-        region: us-central1
-      postgres:
-        enabled: true
-        backup:
-          gcs:
-            enabled: true
-            bucket: ""
-    asserts:
-      - failedTemplate:
-          errorMessage: "REQUIRED: postgres.backup.gcs.bucket when postgres.backup.gcs.enabled"
