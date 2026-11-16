@@ -73,8 +73,8 @@ google:
   # Set false off-GKE to skip ManagedCertificate / BackendConfig / FrontendConfig,
   # whose CRDs only exist on GKE.
   gke: true
-  # GCP project holding this app's images and secrets.
-  # Defaults to "<app_code>-app-project" when empty.
+  # GCP project holding this app's images and secrets, e.g. luckyswingz-prod-app-project.
+  # Set it: the empty fallback "<app_code>-app-project" is the retired legacy project.
   app_project: ""
   cdn:
     enabled: false
