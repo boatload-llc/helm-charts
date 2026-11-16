@@ -145,6 +145,14 @@ spec:
 {{- toYaml .Values.nginx.env | nindent 8 }}
         {{- end }}
 
+        {{- if .Values.google.maps.enabled }}
+        - name: GOOGLE_MAPS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: maps-key
+        {{- end }}
+
         {{- if .Values.firebase.enabled }}
         - name: FIREBASE_KEY
           valueFrom:
