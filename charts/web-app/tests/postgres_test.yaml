@@ -108,6 +108,33 @@ tests:
               full: "0 2 * * *"
               differential: "0 */6 * * *"
 
+  - it: s3 with its schedules unset backs up only when asked, never on a timer
+    set:
+      enabled: true
+      lifecycle: stage
+      app_code: test
+      google:
+        region: us-central1
+      postgres:
+        enabled: true
+        backup:
+          s3:
+            enabled: true
+            bucket: postgres-test
+            endpoint: s3.us-central1.example.net
+            region: garage
+            secret: pgbackrest-s3
+            schedules: null
+    asserts:
+      - equal:
+          path: spec.backups.pgbackrest.repos[0]
+          value:
+            name: repo2
+            s3:
+              bucket: postgres-test
+              endpoint: s3.us-central1.example.net
+              region: garage
+
   - it: s3 enabled signs in with the keys in its secret, addresses the bucket by path and keeps 14 fulls
     release:
       namespace: prod-test
