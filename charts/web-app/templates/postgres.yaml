@@ -95,9 +95,11 @@ spec:
           bucket: {{ required "REQUIRED: postgres.backup.s3.bucket when postgres.backup.s3.enabled" .bucket | quote }}
           endpoint: {{ .endpoint | quote }}
           region: {{ .region | quote }}
+        {{- with .schedules }}
         schedules:
-          full: {{ .schedules.full | quote }}
-          differential: {{ .schedules.differential | quote }}
+          full: {{ .full | quote }}
+          differential: {{ .differential | quote }}
+        {{- end }}
       {{- end }}
       {{- else }}
       - name: repo1
