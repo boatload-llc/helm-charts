@@ -100,6 +100,23 @@ tests:
           path: metadata.annotations["web-app/api-health-path"]
           value: /api/v1/health/
 
+  - it: names no API health path for an app without an API, so nothing probes one
+    set:
+      enabled: true
+      local: false
+      lifecycle: dev
+      app_code: test
+      domain: example.com
+      api:
+        enabled: false
+      ingress:
+        enabled: true
+        mci: false
+        https: false
+    asserts:
+      - notExists:
+          path: metadata.annotations["web-app/api-health-path"]
+
   - it: default backend is nginx-svc when nginx enabled
     set:
       enabled: true
