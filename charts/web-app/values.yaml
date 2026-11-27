@@ -48,15 +48,15 @@ nginx:
   timeoutSec: 86400
   terminationGracePeriodSeconds: 120
   memory:
-    request: 8Mi
-    limit: 16Mi
+    request: 32Mi
+    limit: 64Mi
   cpu:
     request: .01
     limit: .25
   replicas: 1
   max_replicas: 3
   target_cpu: 80
-  target_mem: 12Mi
+  target_mem: 48Mi
 
 google:
   key: false
